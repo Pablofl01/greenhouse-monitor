@@ -7,21 +7,17 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
-#include "files.h"
 
 int scan_chars();
 int read_char();
 int write_char();
 
 int main() {
-	//scan_chars();
+	scan_chars();
 	/*read_char();
 	write_char();
 	read_char();*/
-
-	read_file("test.txt");
 
 	return 0;
 }
