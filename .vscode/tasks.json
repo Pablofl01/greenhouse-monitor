@@ -1,28 +1,84 @@
 {
+    "version": "2.0.0",
     "tasks": [
         {
-            "type": "cppbuild",
-            "label": "C/C++: aarch64-linux-gnu-gcc compilar archivo activo",
-            "command": "/usr/bin/aarch64-linux-gnu-gcc",
-            "args": [
-                "-fdiagnostics-color=always",
-                "-g",
-                "${file}",
-                "-o",
-                "${fileDirname}/${fileBasenameNoExtension}"
-            ],
-            "options": {
-                "cwd": "${fileDirname}"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
+            "label": "build",
+            "type": "shell",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "detail": "Tarea generada por el depurador."
+            "windows": {
+                "command": "powershell",
+                "args": [
+                    "-c",
+                    "mingw32-make"
+                ]
+            },
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "-c",
+                    "make"
+                ]
+            },
+            "osx": {
+                "command": "bash",
+                "args": [
+                    "-c",
+                    "make"
+                ]
+            }
+        },
+        {
+            "label": "build & run",
+            "type": "shell",
+            "windows": {
+                "command": "powershell",
+                "args": [
+                    "-c",
+                    "'mingw32-make run'"
+                ]
+            },
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "-c",
+                    "'make run'"
+                ]
+            },
+            "osx": {
+                "command": "bash",
+                "args": [
+                    "-c",
+                    "'make run'"
+                ]
+            }
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "windows": {
+                "command": "powershell",
+                "args": [
+                    "-c",
+                    "'mingw32-make clean'"
+                ]
+            },
+            "linux": {
+                "command": "bash",
+                "args": [
+                    "-c",
+                    "'make clean'"
+                ]
+            },
+            "osx": {
+                "command": "bash",
+                "args": [
+                    "-c",
+                    "'make clean'"
+                ]
+            }
         }
-    ],
-    "version": "2.0.0"
+    ]
 }
