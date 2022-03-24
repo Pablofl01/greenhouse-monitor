@@ -1,0 +1,9 @@
+{
+	"folders": [
+		{
+			"uri": "vscode-remote://ssh-remote+raspberrypi.local/home/javier/greenhouse-monitor"
+		}
+	],
+	"remoteAuthority": "ssh-remote+raspberrypi.local",
+	"settings": {}
+}
