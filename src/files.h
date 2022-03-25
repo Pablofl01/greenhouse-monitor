@@ -1,10 +1,3 @@
-/*
- * files.h
- *
- *  Created on: 14 mar. 2022
- *      Author: p.flopez@alumnos.upm.es
- */
-
 #ifndef FILES_H_
 #define FILES_H_
 

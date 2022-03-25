@@ -1,10 +1,3 @@
-/*
- * bt.c
- *
- *  Created on: 14 mar. 2022
- *      Author: p.flopez@alumnos.upm.es
- */
-
 #include "bt.h"
 /*#include <stdio.h>
 #include <regex.h>*/
@@ -36,50 +29,54 @@
 }**/
 
 // Stablishes connection with a BLE device and reads the specified characteristic.
-int read_char (char *mac, int output) {
-	int size = 100;
-		/**char output[size];
-		char mac[] = "30:C6:F7:00:22:EE";
-		char uuid[] = "beb5483e-36e1-4688-b7f5-ea07361b26a9";**/
-		char input[1024];
+int read_char (char *mac, char *output) {
+	char input[1024];
 
-		snprintf(input, 1024, "gatttool -b %s --char-read --uuid=%s", mac, READ_UUID);
+	snprintf(input, 1024, "gatttool -b %s --char-read --uuid=%s", mac, READ_UUID);
 
-		FILE *cmd_output = popen(input, "r");
-		if (cmd_output == NULL) {
-			printf("Error abriendo la conexión con la consola.");
-			return -1;
-		}
+	FILE *cmd_output = popen(input, "r");
+	if (cmd_output == NULL) {
+		printf("Error abriendo la conexión con la consola.");
+		return -1;
+	}
 
-		while (fgets((char*)output, size, cmd_output) != NULL)
-		    printf("%d", output);
+		while (fgets(output, 256, cmd_output) != NULL)
+		    printf("%s", output);
+
+		output[strcspn(output, "\n\r")] = 0;
+
+		int data;
+
+		if (strlen(output) == 36) {
+			data = convert_data(output);
+		} else data = -1;
 
 		pclose(cmd_output);
-		return 0;
+		return data;
 }
 
 // Stablishes connection with a BLE device and writes the given value to the specified characteristic.
 int write_char (char *mac, char *value, char *output) {
-	int size = 100;
-		/**char output[size];
-		char mac[] = "30:C6:F7:00:22:EE";
-		char handler[]="0x002a";
-		char value[]="0x001";**/
-		char input[1024];
+	/**int size = 100;
+	char output[size];
+	char mac[] = "30:C6:F7:00:22:EE";
+	char handler[]="0x002a";
+	char value[]="0x001";**/
+	char input[1024];
 
-		snprintf(input, 1024, "gatttool -b %s --char-write-req --handle=%s --value=%s", mac, WRITE_HANDLER, value);
+	snprintf(input, 1024, "gatttool -b %s --char-write-req --handle=%s --value=%s", mac, WRITE_HANDLER, value);
 
-		FILE *cmd_output = popen(input, "r");
-		if (cmd_output == NULL) {
-			printf("Error abriendo la conexión con la consola.");
-			return -1;
-		}
+	FILE *cmd_output = popen(input, "r");
+	if (cmd_output == NULL) {
+		printf("Error abriendo la conexión con la consola.");
+		return -1;
+	}
 
-		while (fgets(output, size, cmd_output) != NULL)
-		    printf("%s", output);
+	while (fgets(output, sizeof(output), cmd_output) != NULL)
+	    printf("%s", output);
 
-		pclose(cmd_output);
-		return 0;
+	pclose(cmd_output);
+	return 0;
 }
 
 // Check an array of strings in order to remove any line that does not match with a valid MAC address.

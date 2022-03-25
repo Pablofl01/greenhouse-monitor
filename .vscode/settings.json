@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "bt.h": "c",
+        "*.tcc": "c",
+        "type_traits": "c"
+    }
+}

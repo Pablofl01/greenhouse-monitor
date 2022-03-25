@@ -9,13 +9,14 @@
 // Some needed constants.
 #define MAX_LINE_LENGTH 256
 #define MAX_MAC_LENGTH 17
+#define WRITE_VALUE "0x001"
+const char *file = "devices.txt";
 
 char **macs;
 char **checked_macs;
+char *data, *result;
 
 int main() {
-
-	char file[] = "test.txt";
 
 	int device_number = count_lines(file);
 
@@ -36,7 +37,6 @@ int main() {
 		return -2;
 	}
 
-
 	/**for (int i=0; i<device_number; i++) {
 		printf("%s\n", macs[i]);
 	}**/
@@ -52,15 +52,18 @@ int main() {
 		}
 	}
 
-	//write_lines("out.txt", "Hello World!");
+	data = malloc(MAX_LINE_LENGTH);
+	result = malloc(MAX_LINE_LENGTH);
 
-	/**int output = 0;
-	for (int i=0; i<sizeof(checked_macs); i++) {
-		if (read_char(checked_macs[i], output) == -1) {
-			printf("Error leyendo los datos del dispositivo. ID: %s", i);
-		} 
-	}**/
+	for (int i=0; i<device_number; i++) {
+		if (strcmp(checked_macs[i], "") != 0) {
+			write_char(checked_macs[i], WRITE_VALUE, result);
+			read_char(checked_macs[i], data);
+			write_lines("output.txt", (char*) data);
+		}
+	}
 
+	free(data);
 	free(macs);
 	free(checked_macs);
 

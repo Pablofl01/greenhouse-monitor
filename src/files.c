@@ -1,10 +1,3 @@
-/**
- * files.c
- *
- *  Created on: 14 mar. 2022
- *      Author: p.flopez@alumnos.upm.es
- **/
-
 #include "files.h"
 
 //Count lines in a file in order to allocate enough memory for storing its content.
