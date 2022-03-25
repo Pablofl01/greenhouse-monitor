@@ -9,6 +9,7 @@ int read_char (char *mac, char *output) {
 	FILE *cmd_output = popen(input, "r");
 	if (cmd_output == NULL) {
 		printf("Error abriendo la conexión con la consola.");
+		output = "No ha sido posible conectar con el dispositivo.";
 		return -1;
 	}
 
@@ -59,5 +60,5 @@ int check_macs (int device_number, char **to_check, char **checked) {
 			n++;
 		}
 	}
-	return 0;
+	return n;
 }
