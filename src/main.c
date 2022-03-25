@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <wiringPi.h>
 #include "fsm_greenhouse.h"
 #include "fsm.h"
 #include "tmr.h"
