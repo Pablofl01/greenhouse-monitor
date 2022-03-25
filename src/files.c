@@ -38,8 +38,6 @@ int read_lines (char *filename, char **read) {
 
     while ((lines = getline(&read[n], &len, filePointer)) != -1) {
 		read[n][strcspn(read[n], "\n\r")] = 0;
-        //printf("Retrieved line of length %zu:\n", strlen(read[n]));
-        //printf("%s\n", read[n]);
 		n++;
     }
 

@@ -1,32 +1,4 @@
 #include "bt.h"
-/*#include <stdio.h>
-#include <regex.h>*/
-
-// TO-DO
-// Scans available characteristics of a BLE device.
-/**int scan_chars(char mac[100][18]) {
-	int size = 100;
-	char output[size];
-	for (int i=0; i < 100; i++) {
-		if (mac[i] != NULL) {
-			char cmd[50] = "gatttool -b ";
-			strcat(cmd, mac[i]);
-			strcat(cmd, " --characteristics");
-			FILE *fp = popen(cmd, "r");
-			while (fgets(output, size, fp) != NULL)
-			printf("%s - Características disponibles:\n%s", mac[i][0], output);
-		}
-	}
-	FILE *fp = popen("gatttool -b 30:C6:F7:00:22:EE --characteristics", "r");
-	//FILE *fp = popen("ls", "r");
-	//FILE *fp = popen("gatttool -b 78:21:84:7E:56:BA --characteristics", "r");
-
-	while (fgets(output, size, fp) != NULL)
-	    printf("Características disponibles:\n%s", output);
-
-	pclose(fp);
-	return 0;
-}**/
 
 // Stablishes connection with a BLE device and reads the specified characteristic.
 int read_char (char *mac, char *output) {
@@ -45,23 +17,12 @@ int read_char (char *mac, char *output) {
 
 		output[strcspn(output, "\n\r")] = 0;
 
-		int data;
-
-		if (strlen(output) == 36) {
-			data = convert_data(output);
-		} else data = -1;
-
 		pclose(cmd_output);
-		return data;
+		return 0;
 }
 
 // Stablishes connection with a BLE device and writes the given value to the specified characteristic.
 int write_char (char *mac, char *value, char *output) {
-	/**int size = 100;
-	char output[size];
-	char mac[] = "30:C6:F7:00:22:EE";
-	char handler[]="0x002a";
-	char value[]="0x001";**/
 	char input[1024];
 
 	snprintf(input, 1024, "gatttool -b %s --char-write-req --handle=%s --value=%s", mac, WRITE_HANDLER, value);
@@ -98,6 +59,5 @@ int check_macs (int device_number, char **to_check, char **checked) {
 			n++;
 		}
 	}
-
 	return 0;
 }
