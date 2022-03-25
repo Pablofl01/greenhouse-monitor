@@ -67,3 +67,24 @@ int write_lines (char *filename, char *write) {
 	fclose(filePointer);
 	return 0;
 }
+
+int write_values (char *filename, int write, int device_id) {
+	FILE *filePointer;
+
+	filePointer = fopen(filename, "a");
+	if (filePointer == NULL) {
+		printf("Error abriendo el fichero.\n");
+		return -1;
+	}
+
+	time_t t = time(NULL);
+  	struct tm tm = *localtime(&t);
+
+	if ((fprintf(filePointer,"[%d-%02d-%02d %02d:%02d:%02d] Valor sensor %d: %d\n", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, device_id, write)) < 0) {
+		fclose(filePointer);
+		return -2;
+	} 
+
+	fclose(filePointer);
+	return 0;
+}

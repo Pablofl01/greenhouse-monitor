@@ -13,20 +13,20 @@ int read_char (char *mac, char *output) {
 		return -1;
 	}
 
-		while (fgets(output, 256, cmd_output) != NULL)
-		    printf("%s", output);
+	while (fgets(output, 256, cmd_output) != NULL)
+	    printf("%s", output);
 
-		output[strcspn(output, "\n\r")] = 0;
+	output[strcspn(output, "\n\r")] = 0;
 
-		pclose(cmd_output);
-		return 0;
+	pclose(cmd_output);
+	return 0;
 }
 
 // Stablishes connection with a BLE device and writes the given value to the specified characteristic.
 int write_char (char *mac, char *value, char *output) {
 	char input[1024];
 
-	snprintf(input, 1024, "gatttool -b %s --char-write-req --handle=%s --value=%s", mac, WRITE_HANDLER, value);
+	snprintf(input, 1024, "gatttool -b %s --char-write-req --handle=0x002d --value=%s", mac, value);
 
 	FILE *cmd_output = popen(input, "r");
 	if (cmd_output == NULL) {

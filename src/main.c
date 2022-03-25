@@ -28,14 +28,15 @@ void timer_isr (union sigval value){
 // Some needed constants.
 #define MAX_LINE_LENGTH 256
 #define MAX_MAC_LENGTH 17
-#define WRITE_VALUE "0x001"
+#define WRITE_VALUE "0x01"
 const char *file = "devices.txt";
 
 char **macs;
 char **checked_macs;
 char *data, *result;
-int device_id = -1;
+int device_id = 0;
 int checked_devices;
+int valid_data = 1;
 
 //ESPERA HASTA LA PROXIMA ACTIVACION DEL RELOJ
 
@@ -68,12 +69,23 @@ void leer(fsm_t* this){
 	result = malloc(MAX_LINE_LENGTH);
 
 	write_char(checked_macs[device_id], WRITE_VALUE, result);
-	read_char(checked_macs[device_id], data);
+	valid_data = read_char(checked_macs[device_id], data);
 	return;
 }
 
 void escribir(fsm_t* this){
-	write_lines("output.txt", (char*) data);
+	if (valid_data == 0) {
+
+		char to_print[4];
+		to_print[0] = data[27];
+		to_print[1] = data[28];
+		to_print[2] = data[24];
+		to_print[3] = data[25];
+	
+		int num = (int)strtol(to_print, NULL, 16);
+
+		write_values("output.txt", num, device_id);
+	} else if (valid_data == -1) printf("No se han recogido correctamente los datos del sensor %d\n", device_id);
 
 	return;
 }

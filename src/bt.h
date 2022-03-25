@@ -10,7 +10,6 @@
 
 #define READ_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 #define WRITE_ID "beb5483e-36e1-4688-b7f5-ea07361b26a9"
-#define WRITE_HANDLER "0x002a"
 
 //int scan_chars();
 int read_char (char *mac, char *output);
