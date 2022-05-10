@@ -3,12 +3,25 @@
 #include <unistd.h>
 #include <regex.h>
 #include <wiringPi.h>
+
+#include "constants.h"
 #include "fsm_greenhouse.h"
 #include "fsm.h"
 #include "tmr.h"
+#include "files.h"
+#include "bt.h"
+#include "dbHandler.h"
 
-#define TIEMPO_ESPERA 5000 //TIEMPO DE ESPERA ENTRE MEDIDAS (ms)
+// Some needed constants
+char *data, *result;
+int device_id = 0;
+char **checked_macs;
+int checked_devices;
+int valid_data = 1;
+const char *file = "devices.txt";
+const char *dbName = "test.db";
 
+sqlite3 *db;
 int FLAG_TIMER =0;
 
 //DEFINICION DE LOS ESTADOS
@@ -22,21 +35,7 @@ enum fsm_state{
 void timer_isr (union sigval value){
 	FLAG_TIMER = 1;
 }
-#include "files.h"
-#include "bt.h"
 
-// Some needed constants.
-#define MAX_LINE_LENGTH 256
-#define MAX_MAC_LENGTH 17
-#define WRITE_VALUE "0x01"
-const char *file = "devices.txt";
-
-char **macs;
-char **checked_macs;
-char *data, *result;
-int device_id = 0;
-int checked_devices;
-int valid_data = 1;
 
 //ESPERA HASTA LA PROXIMA ACTIVACION DEL RELOJ
 
@@ -84,7 +83,7 @@ void escribir(fsm_t* this){
 	
 		int num = (int)strtol(to_print, NULL, 16);
 
-		write_values("output.txt", num, device_id);
+		writeValues("output.txt", num, device_id);
 	} else if (valid_data == -1) printf("No se han recogido correctamente los datos del sensor %d\n", device_id);
 
 	return;
@@ -104,11 +103,18 @@ void resetear(fsm_t* this){
 	}
 }
 
+
+int initialize() {
+	ifwrite_values
+	}
+	return -1;
+}
+
 int main()
 {
 	printf("Comienzo programa\n");
-
-	fsm_trans_t greenhouse_tabla[]={
+	initialize();
+	/**fsm_trans_t greenhouse_tabla[]={
 			{WAIT,comprueba_timer,SCAN_READ_DATA,leer},
 			{SCAN_READ_DATA,comprueba_datos_leidos,WRITE_DATA,escribir},
 			{WRITE_DATA,comprueba_todos_revisados,WAIT,resetear},
@@ -117,42 +123,15 @@ int main()
 	};
 	fsm_t* greenhouse_fsm = fsm_new(SCAN_READ_DATA,greenhouse_tabla,NULL);
 
-	int device_number = count_lines(file);
-
-	if (device_number == -1) {
-		printf("Error recuperando el número de dispositivos.\n");
-		return -1;
-	}
-
-	printf("Número de dispositivos listados: %d\n", device_number);
-
-	macs = malloc(device_number);
-	for (int i=0; i<device_number; i++) {
-		macs[i] = malloc(MAX_MAC_LENGTH);
-	}
-
-	if (read_lines(file, macs) == -1) {
-		printf("Error recuperando las direcciones de los dispositivos.\n");
-		return -2;
-	}
-
-	checked_macs = (char**) malloc(device_number);
-	for (int i=0; i<device_number; i++) {
-		checked_macs[i] = (char*) malloc(MAX_MAC_LENGTH);
-	}
-
-	checked_devices = check_macs(device_number, macs, checked_macs);
-
-	if (checked_devices == -1) return -1;
+	
 
 	while (1)
 	{
 		fsm_fire(greenhouse_fsm);
-	}
+	}**/
 	
 	free(data);
-	free(macs);
-	free(checked_macs);
+	//free(checked_macs);
 
 	return (0);
 }
