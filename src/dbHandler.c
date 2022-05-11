@@ -12,10 +12,10 @@ int createTables()
     int dbStatus;
 
     sql = "CREATE TABLE IF NOT EXISTS devices ("
-          "`id` INTEGER PRIMARY KEY AUTOINCREMENT, "
-          "`address` VARCHAR(17) NOT NULL UNIQUE, "
-          "`name` VARCHAR(17) NOT NULL UNIQUE, "
-          "`lastStatus` BOOLEAN DEFAULT 1 NOT NULL) ";
+          "'id' INTEGER PRIMARY KEY AUTOINCREMENT, "
+          "'address' VARCHAR(17) NOT NULL UNIQUE, "
+          "'name' VARCHAR(17) NOT NULL UNIQUE, "
+          "'lastStatus' BOOLEAN DEFAULT 1 NOT NULL) ";
     dbStatus = sqlite3_exec(db, sql, NULL, 0, &error);
     if (dbStatus != SQLITE_OK)
     {
@@ -26,9 +26,9 @@ int createTables()
         printf("Tabla 'devices' creada.\n");
 
     sql = "CREATE TABLE IF NOT EXISTS configuration ("
-          "`option` VARCHAR(255) PRIMARY KEY, "
-          "`value` VARCHAR(255),"
-          "`prevValue` VARCHAR(255))";
+          "'option' VARCHAR(255) PRIMARY KEY, "
+          "'value' VARCHAR(255),"
+          "'prevValue' VARCHAR(255))";
     dbStatus = sqlite3_exec(db, sql, NULL, 0, &error);
     if (dbStatus != SQLITE_OK)
     {
@@ -46,7 +46,7 @@ int writeDevices(char **checked_macs)
     char sql[1024];
     int dbStatus;
 
-    char drop[] = "DELETE FROM devices";
+    char *drop = "DELETE FROM devices";
 
     dbStatus = sqlite3_exec(db, drop, NULL, 0, &error);
 
@@ -55,22 +55,27 @@ int writeDevices(char **checked_macs)
         printf("Error al eliminar datos antiguos de la tabla 'devices': %s.\n", error);
         return -1;
     }
-
+    
     for (int i = 0; i < checked_devices; i++)
     {
-        char deviceName[MAX_MAC_LENGTH];
-        strncpy(deviceName, checked_macs[i], MAX_MAC_LENGTH);
-        int len = strlen(deviceName);
+        char deviceMAC[MAX_MAC_LENGTH];
+        strncpy(deviceMAC, checked_macs[i], MAX_MAC_LENGTH);
+        int len = strlen(deviceMAC);
 
-        for(int j = 0; j < len; j++) {
-		    if(deviceName[j] == ':') {
-			    for(int k = j; k < len; k++) {
-				    deviceName[k] = deviceName[k + 1];
-			    }
-			    len--;
-			    j--;	
-		    } 
-	    }	
+        for (int j = 0; j < len; j++)
+        {
+            if (deviceMAC[j] == ':')
+            {
+                for (int k = j; k < len; k++)
+                {
+                    deviceMAC[k] = deviceMAC[k + 1];
+                }
+                len--;
+                j--;
+            }
+        }
+        char deviceName[12];
+        strncpy(deviceName, deviceMAC, 12);
 
         snprintf(sql, 1024, "INSERT INTO devices (id, address, name) VALUES(%d, '%s', '%s');", i, checked_macs[i], deviceName);
         dbStatus = sqlite3_exec(db, sql, NULL, 0, &error);
@@ -81,7 +86,7 @@ int writeDevices(char **checked_macs)
         }
 
         char createTable[1024];
-        snprintf(createTable, 1024, "CREATE TABLE IF NOT EXISTS `%s` (`value` INTEGER, `timestamp` INTEGER);", deviceName);
+        snprintf(createTable, 1024, "CREATE TABLE IF NOT EXISTS '%s' ('value' INTEGER, 'timestamp' INTEGER);", deviceName);
         dbStatus = sqlite3_exec(db, createTable, NULL, 0, &error);
         if (dbStatus != SQLITE_OK)
         {
@@ -98,22 +103,10 @@ int writeDevices(char **checked_macs)
 int writeConfiguration()
 {
     char options[][255] = {
-        "waitTime",
-        "highTemp",
-        "lowTemp",
-        "highRelHum",
-        "lowRelHum",
-        "highHum",
-        "lowHum"};
+        "waitTime"};
 
     int values[7] = {
-        60,
-        45,
-        12,
-        87,
-        11,
-        60,
-        40};
+        60};
 
     for (int i = 0; i < sizeof(values) / sizeof(values[0]); i++)
     {
@@ -153,7 +146,7 @@ int initializeDB(char *dbName)
         return -3;
     }
     else
-        printf("Tabla de dispositivos creada correctamente.\n");
+        printf("Tabla de configuración creada correctamente.\n");
 
     if (writeDevices(checked_macs) != 0)
     {
@@ -161,15 +154,8 @@ int initializeDB(char *dbName)
         return -4;
     }
     else
-        printf("Tabla de configuración correctamente.\n");
 
-    if (readEntries("devices") != 0)
-    {
-        printf("Error al leer la tabla 'devices' de la base de datos.\nError: %s.\n", sqlite3_errmsg(db));
-        return -5;
-    }
-    else
-        printf("Valores leídos correctamente.\n");
+        printf("Tabla de dispositivos creada correctamente.\n");
 
     return 0;
 }
@@ -205,14 +191,14 @@ int writeConfig(char *option, int value)
     return 0;
 }
 
-int getDevice(int id, char *deviceName)
+int getDevice(int id, char *deviceMAC)
 {
     int dbStatus;
     char sql[1024];
 
     snprintf(sql, 1024, "SELECT name FROM devices WHERE id=%d;", id);
 
-    dbStatus = sqlite3_exec(db, sql, retrieveName, deviceName, &error);
+    dbStatus = sqlite3_exec(db, sql, retrieveName, deviceMAC, &error);
 
     if (dbStatus != SQLITE_OK)
     {
@@ -224,9 +210,9 @@ int getDevice(int id, char *deviceName)
     return 0;
 }
 
-static int retrieveName(char *deviceName, int argc, char **argv, char **colNames)
+static int retrieveName(char *deviceMAC, int argc, char **argv, char **colNames)
 {
-    strncpy(deviceName, argv[0], 12);
+    strncpy(deviceMAC, argv[0], 12);
     return 0;
 }
 
@@ -235,7 +221,7 @@ int writeData(char *device, int value)
     int dbStatus;
     char sql[1024];
 
-    snprintf(sql, 1024, "INSERT INTO `%s` (timestamp, value) VALUES (%d, %d);", device, time(NULL), value);
+    snprintf(sql, 1024, "INSERT INTO '%s' (timestamp, value) VALUES (%d, %d);", device, time(NULL), value);
 
     dbStatus = sqlite3_exec(db, sql, NULL, 0, &error);
 
@@ -249,19 +235,119 @@ int writeData(char *device, int value)
     return 0;
 }
 
-int readEntries(char *table)
+int sensorDown(int deviceId)
 {
     int dbStatus;
     char sql[1024];
 
-    snprintf(sql, 23, "SELECT * FROM %s;", table);
+    snprintf(sql, 1024, "UPDATE devices SET 'lastStatus'=0 WHERE id=%d;", deviceId);
 
-    dbStatus = sqlite3_exec(db, sql, selectPrint, 0, &error);
+    dbStatus = sqlite3_exec(db, sql, NULL, 0, &error);
 
     if (dbStatus != SQLITE_OK)
     {
-        printf("Error leyendo la tabla '%s': %s.\n", table, sqlite3_errmsg(db));
+        printf("Error al deshabilitar el sensor %s: %s.\n", deviceId, error);
         sqlite3_free(error);
-        return -2;
+        return -1;
     }
+
+    return 0;
+}
+
+int checkSensor(int deviceId)
+{
+    int dbStatus;
+    char sql[1024];
+
+    snprintf(sql, 1024, "SELECT lastStatus FROM devices WHERE id=%d;", deviceId);
+
+    int status = 0;
+
+    dbStatus = sqlite3_exec(db, sql, readStatus, &status, &error);
+
+    if (dbStatus != SQLITE_OK)
+    {
+        printf("Error al deshabilitar el sensor %s: %s.\n", deviceId, error);
+        sqlite3_free(error);
+        return -1;
+    }
+
+    return status;
+}
+
+static int readStatus(int *status, int argc, char **argv, char **colNames)
+{
+    strncpy(status, argv[0], 2);
+    return 0;
+}
+
+int compareConfig()
+{
+    int dbStatus;
+    char sql[1024];
+
+    snprintf(sql, 1024, "SELECT value, prevValue FROM configuration WHERE option='%s';", "waitTime");
+
+    int status = 0;
+
+    dbStatus = sqlite3_exec(db, sql, compareValues, &status, &error);
+
+    if (dbStatus != SQLITE_OK)
+    {
+        printf("Error al comprobar las configuraciones: %s.\n", error);
+        sqlite3_free(error);
+        return -1;
+    }
+
+    return status;
+}
+
+static int compareValues(int *status, int argc, char **argv, char **colNames)
+{
+    status = 1;
+    if (argv[0] == argv[1])
+    {
+        status = 0;
+        int dbStatus;
+        char sql[1024];
+
+        snprintf(sql, 1024, "UPDATE configuration SET prevValue=%d;", argv[0]);
+
+        dbStatus = sqlite3_exec(db, sql, NULL, 0, &error);
+
+        if (dbStatus != SQLITE_OK)
+        {
+            printf("Error al actualizar las configuraciones: %s.\n", error);
+            sqlite3_free(error);
+            return -1;
+        }
+    }
+    return 0;
+}
+
+int readTime()
+{
+    int dbStatus;
+    char sql[1024];
+
+    snprintf(sql, 1024, "SELECT value FROM configuration WHERE option='waitTime';");
+
+    int time = 0;
+
+    dbStatus = sqlite3_exec(db, sql, readStatus, &time, &error);
+
+    if (dbStatus != SQLITE_OK)
+    {
+        printf("Error al leer la configuración: %s.\n", error);
+        sqlite3_free(error);
+        return -1;
+    }
+
+    return time;
+}
+
+static int resolveTime(int *time, int argc, char **argv, char **colNames)
+{
+    strncpy(time, argv[0], 1);
+    return 0;
 }
