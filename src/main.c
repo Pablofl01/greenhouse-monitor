@@ -3,35 +3,36 @@
 #include <unistd.h>
 #include <regex.h>
 #include <wiringPi.h>
+#include <pthread.h>
+
+#include "constants.h"
 #include "fsm_greenhouse.h"
 #include "fsm.h"
 #include "tmr.h"
 #include "files.h"
 #include "bt.h"
-#include <pthread.h>
-
-#define TIEMPO_ESPERA 5000 //TIEMPO DE ESPERA ENTRE MEDIDAS (ms)
-#define CLK_MS 10
+#include "dbHandler.h"
 
 int FLAG_TIMER =0;
 int FLAG_DATOS_LEIDOS = 0;
 int FLAG_INIT= 0;
 int FLAG_CONFIG= 0;
 
-
-
-// Some needed constants.
+// Some needed constants
+#define TIEMPO_ESPERA 5000 //TIEMPO DE ESPERA ENTRE MEDIDAS (ms)
+#define CLK_MS 10
 #define MAX_LINE_LENGTH 256
 #define MAX_MAC_LENGTH 17
 #define WRITE_VALUE "0x01"
-const char *file = "devices.txt";
 
-char **macs;
-char **checked_macs;
 char *data, *result;
 int device_id = 0;
+char **checked_macs;
 int checked_devices;
 int valid_data = 1;
+const char *file = "devices.txt";
+const char *dbName = "test.sqlite";
+const sqlite3 *db;
 
 //DEFINICION DE LOS ESTADOS
 
@@ -49,46 +50,22 @@ void timer_isr (union sigval value){
 
 
 int ConfiguraInicializaSistema(){
-  // Se inicializan cosas
-  int device_number = count_lines(file);
+	if (initializeFiles(file) != 0) {
+		printf("Error al recuperar los dispositivos del fichero inicial.");
+		return -1;
+	}
 
-  if (device_number == -1) {
-    printf("Error recuperando el número de dispositivos.\n");
-    return -1;
-  }
-
-  printf("Número de dispositivos listados: %d\n", device_number);
-
-  macs = malloc(device_number);
-  for (int i=0; i<device_number; i++) {
-    macs[i] = malloc(MAX_MAC_LENGTH);
-  }
-
-  if (read_lines(file, macs) == -1) {
-    printf("Error recuperando las direcciones de los dispositivos.\n");
-    return -2;
-  }
-
-  checked_macs = (char**) malloc(device_number);
-  for (int i=0; i<device_number; i++) {
-    checked_macs[i] = (char*) malloc(MAX_MAC_LENGTH);
-  }
-
-  checked_devices = check_macs(device_number, macs, checked_macs);
-
-  if (checked_devices == -1) {
-    return -1;
-  }
+	if (initializeDB(dbName) != 0) {
+		printf("Error al configurar la base de datos.");
+		return -1;
+	}
 
   FLAG_INIT = 1;
-
   
-  
-  return 1;  
-} 
+  return 0;  
+}
 
 //ESPERA HASTA LA PROXIMA ACTIVACION DEL RELOJ
-
 
 // wait until next_activation (absolute time)
 void delay_until (unsigned int next) {
@@ -115,12 +92,16 @@ int comprueba_datos_leidos (fsm_t* this){
     return 1;
   }
 }
-int comprueba_datos_escritos (fsm_t* this){
-    if (device_id < checked_devices) return 1;
+int comprueba_datos_escritos(fsm_t *this)
+{
+	if (device_id < checked_devices)
+		return 1;
 	return 0;
 }
-int comprueba_todos_revisados (fsm_t* this){
-    if (device_id < checked_devices-1) {
+int comprueba_todos_revisados(fsm_t *this)
+{
+	if (device_id < checked_devices - 1)
+	{
 		device_id++;
 		return 0;
 	}
@@ -168,23 +149,26 @@ void escribir(fsm_t* this){
 		to_print[1] = data[28];
 		to_print[2] = data[24];
 		to_print[3] = data[25];
-	
+
 		int num = (int)strtol(to_print, NULL, 16);
 
-		write_values("output.txt", num, device_id);
-	} else if (valid_data == -1) printf("No se han recogido correctamente los datos del sensor %d\n", device_id);
+		writeValues("output.txt", num, device_id);
+	}
+	else if (valid_data == -1)
+		printf("No se han recogido correctamente los datos del sensor %d\n", device_id);
 
 	return;
 }
 
-void resetear(fsm_t* this){
+void resetear(fsm_t *this)
+{
 	device_id = 0;
-    printf("WAIT\n");
-	FLAG_TIMER=0;
-	if (FLAG_TIMER==0)
+	printf("WAIT\n");
+	FLAG_TIMER = 0;
+	if (FLAG_TIMER == 0)
 	{
-		tmr_t* tmr = tmr_new(timer_isr);
-		tmr_startms(tmr,TIEMPO_ESPERA);
+		tmr_t *tmr = tmr_new(timer_isr);
+		tmr_startms(tmr, TIEMPO_ESPERA);
 	}
 }
 

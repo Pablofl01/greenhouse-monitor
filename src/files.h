@@ -7,9 +7,11 @@
 #include <string.h>
 #include <time.h>
 #include <errno.h>
+#include "constants.h"
 
-int count_lines (char *filename);
-int read_lines (char *filename, char **read);
-int write_lines (char *filename, char *write);
+int countLines (char *filename);
+int readLines (char *filename, char **read);
+int writeLines (char *filename, char *write);
+int initializeFiles(char *file);
 
 #endif // FILES_H_

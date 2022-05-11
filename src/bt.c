@@ -1,5 +1,7 @@
 #include "bt.h"
 
+extern char **checked_macs;
+
 // Stablishes connection with a BLE device and reads the specified characteristic.
 int read_char (char *mac, char *output) {
 	char input[1024];
@@ -42,7 +44,7 @@ int write_char (char *mac, char *value, char *output) {
 }
 
 // Check an array of strings in order to remove any line that does not match with a valid MAC address.
-int check_macs (int device_number, char **to_check, char **checked) {
+int check_macs (int device_number, char **to_check) {
 	regex_t regex;
 
 	int result = regcomp(&regex, "([a-fA-F0-9]{2}:){5}[a-fA-F0-9]{2}", REG_EXTENDED|REG_NOSUB);
@@ -56,7 +58,7 @@ int check_macs (int device_number, char **to_check, char **checked) {
 	for (int i=0; i<device_number; i++) {
 		int match = regexec(&regex, to_check[i], (size_t) 0, NULL, 0);
 		if (match == 0) {
-			checked[n] = to_check[i];
+			checked_macs[n] = to_check[i];
 			n++;
 		}
 	}
