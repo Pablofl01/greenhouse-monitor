@@ -1,10 +1,12 @@
 #include "dbHandler.h"
 
 char *error;
+char *tempDeviceName;
 extern char **checked_macs;
 extern int checked_devices;
+extern sqlite3 *db;
 
-int createTables(sqlite3 *db)
+int createTables()
 {
     char *sql;
     int dbStatus;
@@ -39,7 +41,7 @@ int createTables(sqlite3 *db)
     return 0;
 }
 
-int writeDevices(sqlite3 *db, char **checked_macs)
+int writeDevices(char **checked_macs)
 {
     char sql[1024];
     int dbStatus;
@@ -70,7 +72,7 @@ int writeDevices(sqlite3 *db, char **checked_macs)
 		    } 
 	    }	
 
-        snprintf(sql, 1024, "INSERT INTO devices (address, name) VALUES('%s', '%s');", checked_macs[i], deviceName);
+        snprintf(sql, 1024, "INSERT INTO devices (id, address, name) VALUES(%d, '%s', '%s');", i, checked_macs[i], deviceName);
         dbStatus = sqlite3_exec(db, sql, NULL, 0, &error);
         if (dbStatus != SQLITE_OK)
         {
@@ -79,7 +81,7 @@ int writeDevices(sqlite3 *db, char **checked_macs)
         }
 
         char createTable[1024];
-        snprintf(createTable, 1024, "CREATE TABLE IF NOT EXISTS `%s` (`value` INTEGER, `timestamp` DATETIME DEFAULT current_timestamp);", deviceName);
+        snprintf(createTable, 1024, "CREATE TABLE IF NOT EXISTS `%s` (`value` INTEGER, `timestamp` INTEGER);", deviceName);
         dbStatus = sqlite3_exec(db, createTable, NULL, 0, &error);
         if (dbStatus != SQLITE_OK)
         {
@@ -93,7 +95,7 @@ int writeDevices(sqlite3 *db, char **checked_macs)
     return 0;
 }
 
-int writeConfiguration(sqlite3 *db)
+int writeConfiguration()
 {
     char options[][255] = {
         "waitTime",
@@ -115,7 +117,7 @@ int writeConfiguration(sqlite3 *db)
 
     for (int i = 0; i < sizeof(values) / sizeof(values[0]); i++)
     {
-        if (writeConfig(db, options[i], values[i]) != 0)
+        if (writeConfig(options[i], values[i]) != 0)
         {
             printf("Error al escribir la base de datos.\n");
             return -5;
@@ -124,7 +126,7 @@ int writeConfiguration(sqlite3 *db)
     return 0;
 }
 
-int initializeDB(sqlite3 *db, char *dbName)
+int initializeDB(char *dbName)
 {
     int dbStatus;
 
@@ -137,7 +139,7 @@ int initializeDB(sqlite3 *db, char *dbName)
     else
         printf("Base de datos inizializada correctamente.\n");
 
-    if (createTables(db) != 0)
+    if (createTables() != 0)
     {
         printf("Error al crear las tablas de base de datos. Es probable que existan tablas con el mismo nombre.\nError: %s.\n", sqlite3_errmsg(db));
         return -2;
@@ -145,7 +147,7 @@ int initializeDB(sqlite3 *db, char *dbName)
     else
         printf("Tablas creadas correctamente.\n");
 
-    if (writeConfiguration(db) != 0)
+    if (writeConfiguration() != 0)
     {
         printf("Error al introducir las direcciones MAC en la base de datos.\nError: %s.\n", sqlite3_errmsg(db));
         return -3;
@@ -153,7 +155,7 @@ int initializeDB(sqlite3 *db, char *dbName)
     else
         printf("Tabla de dispositivos creada correctamente.\n");
 
-    if (writeDevices(db, checked_macs) != 0)
+    if (writeDevices(checked_macs) != 0)
     {
         printf("Error al introducir los datos en la base de datos.\nError: %s.\n", sqlite3_errmsg(db));
         return -4;
@@ -161,7 +163,7 @@ int initializeDB(sqlite3 *db, char *dbName)
     else
         printf("Tabla de configuración correctamente.\n");
 
-    if (readEntries(db, "devices") != 0)
+    if (readEntries("devices") != 0)
     {
         printf("Error al leer la tabla 'devices' de la base de datos.\nError: %s.\n", sqlite3_errmsg(db));
         return -5;
@@ -184,7 +186,7 @@ static int selectPrint(void *nothing, int argc, char **argv, char **colNames)
     return 0;
 }
 
-int writeConfig(sqlite3 *db, char *option, int value)
+int writeConfig(char *option, int value)
 {
     int dbStatus;
     char sql[1024];
@@ -203,12 +205,37 @@ int writeConfig(sqlite3 *db, char *option, int value)
     return 0;
 }
 
-int writeData(sqlite3 *db, char *device, int value)
+int getDevice(int id, char *deviceName)
 {
     int dbStatus;
     char sql[1024];
 
-    snprintf(sql, 1024, "INSERT INTO `%s` (value) VALUES (%d);", device, value);
+    snprintf(sql, 1024, "SELECT name FROM devices WHERE id=%d;", id);
+
+    dbStatus = sqlite3_exec(db, sql, retrieveName, deviceName, &error);
+
+    if (dbStatus != SQLITE_OK)
+    {
+        printf("Error al recuperar el sensor %d: %s.\n", id, error);
+        sqlite3_free(error);
+        return -1;
+    }
+
+    return 0;
+}
+
+static int retrieveName(char *deviceName, int argc, char **argv, char **colNames)
+{
+    strncpy(deviceName, argv[0], 12);
+    return 0;
+}
+
+int writeData(char *device, int value)
+{
+    int dbStatus;
+    char sql[1024];
+
+    snprintf(sql, 1024, "INSERT INTO `%s` (timestamp, value) VALUES (%d, %d);", device, time(NULL), value);
 
     dbStatus = sqlite3_exec(db, sql, NULL, 0, &error);
 
@@ -222,7 +249,7 @@ int writeData(sqlite3 *db, char *device, int value)
     return 0;
 }
 
-int readEntries(sqlite3 *db, char *table)
+int readEntries(char *table)
 {
     int dbStatus;
     char sql[1024];

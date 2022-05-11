@@ -11,12 +11,14 @@
 #include <sqlite3.h>
 #include "constants.h"
 
-int initializeDB (sqlite3 *db, char *dbName);
-int createTables(sqlite3 *db);
-int readEntries (sqlite3 *db, char *table);
+int initializeDB (char *dbName);
+int createTables();
+int readEntries (char *table);
 static int selectPrint(void *nothing, int argc, char **argv, char **colNames);
-int writeConfig(sqlite3 *db, char *option, int value);
-int writeDevices(sqlite3 *db, char **checked_macs);
-//int write_entries (char *table, char *write);
+int writeConfig(char *option, int value);
+int writeDevices(char **checked_macs);
+int getDevice(int id, char *deviceName);
+static int retrieveName(char *deviceName, int argc, char **argv, char **colNames);
+int writeData(char *device, int value);
 
 #endif // DBHANDLER_H_
