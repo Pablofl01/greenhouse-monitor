@@ -9,7 +9,7 @@
 #include <regex.h>
 #include "constants.h"
 
-#define READ_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+#define READ_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a9"
 #define WRITE_ID "beb5483e-36e1-4688-b7f5-ea07361b26a9"
 
 //int scan_chars();

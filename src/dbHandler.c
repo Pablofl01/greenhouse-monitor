@@ -43,7 +43,7 @@ int createTables()
 
 int writeDevices(char **checked_macs)
 {
-    char sql[1024];
+    char sql[88];
     int dbStatus;
 
     char *drop = "DELETE FROM devices";
@@ -77,7 +77,7 @@ int writeDevices(char **checked_macs)
         char deviceName[12];
         strncpy(deviceName, deviceMAC, 12);
 
-        snprintf(sql, 1024, "INSERT INTO devices (id, address, name) VALUES(%d, '%s', '%s');", i, checked_macs[i], deviceName);
+        snprintf(sql, 88, "INSERT INTO devices (id, address, name) VALUES(%d, '%s', '%s');", i, checked_macs[i], deviceName);
         dbStatus = sqlite3_exec(db, sql, NULL, 0, &error);
         if (dbStatus != SQLITE_OK)
         {
@@ -246,7 +246,6 @@ int sensorDown(int deviceId)
 
     if (dbStatus != SQLITE_OK)
     {
-        printf("Error al deshabilitar el sensor %s: %s.\n", deviceId, error);
         sqlite3_free(error);
         return -1;
     }
@@ -261,7 +260,7 @@ int checkSensor(int deviceId)
 
     snprintf(sql, 1024, "SELECT lastStatus FROM devices WHERE id=%d;", deviceId);
 
-    int status = 0;
+    int status = 1;
 
     dbStatus = sqlite3_exec(db, sql, readStatus, &status, &error);
 
@@ -277,7 +276,7 @@ int checkSensor(int deviceId)
 
 static int readStatus(int *status, int argc, char **argv, char **colNames)
 {
-    strncpy(status, argv[0], 2);
+    if (argv[0] == 0) status = 0;
     return 0;
 }
 
